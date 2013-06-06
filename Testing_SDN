@@ -1,0 +1,667 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Data;
+using System.Data.SqlClient;
+using System.Configuration;
+
+
+{
+    /// <summary>
+    
+    /// </summary>
+    
+    public sealed class DataAccess : IDisposable
+    {
+
+        #region Intialization
+        //Local Variables
+        private static string _sConString = string.Empty;// sConStringNjdb2;
+        
+        //Sql Variables
+        private SqlConnection DbConn;
+        private SqlCommand DbCommand;
+        private SqlDataAdapter DbAdapter;
+        private SqlTransaction DbTrans;
+
+       
+        private bool _encrypted = false;
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        /// Get current sql connection state
+        /// </summary>
+        public string GetCurrentState
+        {
+            get
+            {
+                return DbConn == null ? string.Empty : DbConn.State.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Get the name of current connected Sql Server
+        /// </summary>
+        /// <returns></returns>
+        public string GetServerName
+        {
+            get
+            {
+                try
+                {
+                    return DbConn == null ? string.Empty : DbConn.DataSource;
+                }
+                catch (Exception)
+                {
+
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get the name of current connected DataBase name
+        /// </summary>
+        /// <returns></returns>
+        public string GetDataBaseName
+        {
+            get
+            {
+                return DbConn == null ? string.Empty : DbConn.Database;
+            }
+        }
+
+        //TODO
+        public bool IsEncrypted
+        {
+            get { return _encrypted; }
+            //set { _encrypted = value; }
+        }
+
+        /// <summary>
+        /// Get the author name of this Libraray and Class
+        /// </summary>
+        public string GetAuthor
+        {
+            get
+            {
+                return "MUHAMMAD USMAN [S.E] PAKISTAN";
+            }
+        }
+
+        public string ConnectionString
+        {
+            get
+            {
+                return _sConString;
+            }
+            set
+            {
+                _sConString = value;
+                DbConn.ConnectionString = _sConString;
+            }
+        }
+        #endregion
+        /// <summary>
+        /// Intialize new object
+        /// </summary>
+        /// 
+        /// <example>
+        ///     This example will show how to create and object of DataAccess class
+        ///     <code>
+        ///         DataAccess objDataAccess=new DataAccess(strConstring);
+        ///         objDataAccess.OpenConnection()//Open connection to communicate with sql server;
+        ///     </code>
+        /// </example>
+        public DataAccess()
+        {
+            DbConn = new SqlConnection(_sConString);
+            //CreatConn();
+        }
+
+        /// <summary>
+        /// Assign data base connection string with given con stirng
+        /// </summary>
+        /// <param name="ConnectionString"> connection string fo data base</param>
+        public DataAccess(string ConnectionString)
+        {
+            _sConString =  ConnectionString;
+            DbConn = new SqlConnection(_sConString);            
+            CreatConn();            
+        }
+
+        /// <summary>
+        /// Get the entry at the specified index of the System.Collections.Specialized.NameValueCollection.
+        /// </summary>
+        /// <param name="KeyIndex">KeyName of AppConfig</param>
+        /// <returns></returns>
+        public string GetFromAppConfig(string KeyName)
+        {
+            try
+            {
+                return System.Configuration.ConfigurationManager.AppSettings[KeyName].ToString();
+            }
+            catch (Exception)
+            {
+                
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Get the entry at the specified index of the System.Collections.Specialized.NameValueCollection.
+        /// </summary>
+        /// <param name="KeyIndex">KeyIndex of AppConfig</param>
+        /// <returns></returns>
+        public string GetFromAppConfig(int KeyIndex)
+        {
+            try
+            {
+                
+                return System.Configuration.ConfigurationManager.AppSettings[KeyIndex].ToString();
+            }
+            catch (Exception)
+            {
+                
+                throw;
+            }
+        }
+
+        public string Encrypt(string sConstring)
+        {
+            _encrypted = true;
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Change the SQL Server password for user indicating in connection string to the supplied new password
+        /// </summary>
+        /// <param name="connectionString"></param>
+        /// <param name="newPassword"></param>
+        public void ChangePassword(string connectionString, string newPassword)
+        {
+            try
+            {
+                SqlConnection.ChangePassword(connectionString, newPassword);
+            }
+            catch (Exception)
+            {
+                
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Empties the connection pools
+        /// </summary>
+        public void ClearAllPools()
+        {
+            try
+            {
+                SqlConnection.ClearAllPools();
+            }
+            catch (Exception)
+            {
+                
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Empties the connection pools associated with current connection
+        /// </summary>
+        public void ClearPool()
+        {
+            try
+            {
+                SqlConnection.ClearPool(DbConn);
+            }
+            catch (Exception)
+            {
+                
+                throw;
+            }
+        }
+
+        public string Decrypt(string EncryptedValues)
+        {
+            _encrypted = false;
+            return string.Empty;
+        }
+        /// <summary>
+        /// Close data base connection
+        /// </summary>
+        /// <returns>return true if data base connection closed successfully</returns>
+        private bool CloseDBConn()
+        {
+            try
+            {
+                if (DbConn != null || DbConn.State != ConnectionState.Closed)
+                    DbConn.Close();
+                return true;
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Create Connection with sql server
+        /// </summary>
+        /// <returns></returns>
+        public bool OpenConnection()
+        {
+            return CreatConn();
+        }
+
+        /// <summary>
+        /// Create connection wiht sql server
+        /// </summary>
+        /// <param name="sConString">connection string</param>
+        /// <returns>return true if success else false</returns>
+        public bool OpenConnection(string sConString)
+        {
+            _sConString = sConString;
+            return CreatConn();
+        }
+
+        /// <summary>
+        /// Close data base connection
+        /// </summary>
+        /// <returns>return true if data base connection closed successfully</returns>
+        public bool CloseConnection()
+        {
+            if (DbConn != null && DbConn.State != ConnectionState.Closed)
+                DbConn.Close();
+            return true;
+        }
+
+        /// <summary>
+        /// Reconnect with data base;
+        /// </summary>
+        /// <returns>return true if connection created succesfully</returns>
+        public bool ReConnect()
+        {
+            try
+            {
+                if (DbConn != null && DbConn.State != ConnectionState.Closed)
+                    DbConn.Close();
+                return CreatConn();
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
+        }
+
+        /// <summary>
+        /// Reconnect with data base;
+        /// </summary>
+        /// <param name="sConString">Connection string to connect</param>
+        /// <returns></returns>
+        public bool ReConnect(string sConString)
+        {
+            _sConString = sConString;
+            return ReConnect();
+        }
+
+        /// <summary>
+        /// create new connection
+        /// </summary>
+        /// <returns></returns>
+        private bool CreatConn()
+        {
+            try
+            {
+
+                if (DbConn == null || string.IsNullOrEmpty(DbConn.ConnectionString))
+                    DbConn = new SqlConnection(_sConString);
+                try
+                {
+                    if (DbConn.State != ConnectionState.Open)
+                        DbConn.Open();
+                }
+                catch (Exception)
+                {
+                    if (DbConn.State != ConnectionState.Closed || DbConn.State != ConnectionState.Open)
+                        DbConn.Close();
+                    DbConn.Open();
+                }
+                return true;
+
+            }
+            catch (Exception)
+            {
+                //return false;
+                DbConn.Close();
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// it will return list of all values of first column in query
+        /// </summary>
+        /// <param name="sQuery"></param>
+        /// <returns></returns>
+        public List<string> getList(string sQuery)
+        {
+            return getList(sQuery, 0);
+        }
+
+        /// <summary>
+        /// it will return list of all values of specific column from query
+        /// </summary>
+        /// <param name="sQuery"> string query</param>
+        /// <param name="columnIndex">Index of column to convert in {String List} and return</param>
+        /// <returns>return list of give column</returns>
+        public List<string> getList(string sQuery, int columnIndex)
+        {
+            try
+            {
+                if (CreatConn())
+                {
+                    using (SqlDataAdapter sda = new SqlDataAdapter(sQuery, DbConn))
+                    {
+                        DataTable dt = new DataTable();
+                        sda.Fill(dt);
+                        DbConn.Close();
+                        return dt.Select().Select(x => x[columnIndex].ToString()).ToList<string>();
+                    }
+                }
+                else
+                    return null;
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// select query to get data from data base
+        /// </summary>
+        /// <param name="squery">select query</param>
+        /// <param name="ds">data set to fill data</param>
+        /// <param name="sTableName">string datatable name with in dataset</param>
+        /// <returns>return datatable against given query</returns>
+        public DataTable selectQuery(string squery, DataSet ds, string sTableName)
+        {
+            try
+            {
+                if (CreatConn())
+                {
+                    using (SqlDataAdapter sda = new SqlDataAdapter(squery, DbConn))
+                    {
+                        sda.Fill(ds, sTableName);
+                        return ds.Tables[sTableName];
+                    }
+                }
+                else
+                    return null;
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// select query to get data from data base 
+        /// </summary>
+        /// <param name="sQuery">select query</param>
+        /// <param name="sTableName">string datatable name(anyone you want)</param>
+        /// <returns>return datatable against given query</returns>
+        public DataTable selectQuery(string sQuery, string sTableName)
+        {
+            try
+            {
+                //return selectQuery(sQuery, new DataSet(), "FirstTable");
+                if (CreatConn())
+                {
+                    using (SqlDataAdapter sda = new SqlDataAdapter(sQuery, DbConn))
+                    {
+                        DataTable dt = new DataTable(sTableName);
+                        sda.Fill(dt);
+                        return dt;
+                    }
+                }
+                else
+                    return null;
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// select query to get data from databse
+        /// </summary>
+        /// <param name="sQuery">select query</param>
+        /// <returns>return datatable against given query</returns>
+        public DataTable selectQuery(string sQuery)
+        {
+            try
+            {
+                return selectQuery(sQuery, string.Empty);
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// execute query in database
+        /// </summary>
+        /// <param name="sQuery">CUD(Create Update Delete)</param>
+        /// <returns></returns>
+        public int ExecuteNoneQuery(string sQuery)
+        {
+            try
+            {
+                if (CreatConn())
+                {
+                    using (SqlCommand sqlcmd = new SqlCommand(sQuery, DbConn))
+                    {
+                        return sqlcmd.ExecuteNonQuery();
+                    }
+                }
+                return -1;
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// this method will check that given query contain some value in result or not 
+        /// </summary>
+        /// <param name="sQuery">string select query to check it have some resultant values in data base</param>
+        /// <returns>true:false</returns>
+        public bool IsContainValue(string sQuery)
+        {
+            try
+            {
+                if (CreatConn())
+                {
+                    using (SqlCommand sqlcmd = new SqlCommand(sQuery, DbConn))
+                    {
+                        return sqlcmd.ExecuteScalar() == null ? false : true;
+                    }
+                }
+                else
+                    return false;
+
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Execute the scaler and returns the value of first row in reslut set return by query addition rows and columns ingnored
+        /// </summary>
+        /// <param name="sQuery"></param>
+        /// <returns></returns>
+        public string GetColumnValue(string sQuery)
+        {
+            try
+            {
+                if (CreatConn())
+                {
+                    using (DbCommand = new SqlCommand())
+                    {
+                        DbCommand.Connection = DbConn;
+                        DbCommand.CommandText = sQuery;
+                        DbCommand.CommandType = CommandType.Text;
+                        object result = DbCommand.ExecuteScalar();
+                        return result == null ? string.Empty :
+                            result == System.DBNull.Value ?
+                            string.Empty : Convert.ToString(result);
+                    }
+                }
+                else
+                    return string.Empty;
+                
+            }
+            catch (Exception)
+            {
+                
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// it will execute query and return value of very first cell of first row
+        /// </summary>
+        /// <param name="sQuery">Query for execution</param>
+        /// <returns>values accordingly</returns>
+        public string ExecuteScaler(string sQuery)
+        {
+            try
+            {
+                CreatConn();
+                using (SqlCommand sqlcmd = new SqlCommand(sQuery, DbConn))
+                {
+                    return sqlcmd.ExecuteScalar() as string;
+                }
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// it will take schema of table and return in form of DataTable
+        /// </summary>
+        /// <param name="strSqlTableName">Sql Server table name to get</param>
+        /// <returns></returns>
+        public DataTable GetSqlTableSchema(string strSqlTableName)
+        {
+            try
+            {
+                string sQuery = "SELECT TOP 0 * FROM " + strSqlTableName;
+                return selectQuery(sQuery, strSqlTableName);
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// it will execute DataSet's given table and update database with changes
+        /// </summary>
+        /// <param name="selectQuery">select query</param>
+        /// <param name="ds">Source DataSet</param>
+        /// <param name="tableName">Table name in DataSet</param>
+        public void ExecuteDataSet(string selectQuery, DataSet ds, string tableName)
+        {
+            try
+            {
+                if (CreatConn())
+                {
+                    using (SqlDataAdapter sda = new SqlDataAdapter(selectQuery, DbConn))
+                    {
+                        using (SqlCommandBuilder scb = new SqlCommandBuilder(sda))
+                        {
+                            scb.ConflictOption = ConflictOption.OverwriteChanges;
+                        }
+                        if (string.IsNullOrEmpty(tableName) && ds.Tables.Count > 0)
+                            sda.Update(ds.Tables[0]);
+                        else if (ds.Tables.Contains(tableName))
+                            sda.Update(ds, tableName);
+                        else
+                            throw new Exception("Invalid DataTable name, " + tableName + " not exists in DataSet");
+                    }
+                }
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// It will execute DataTable and update DataBase
+        /// </summary>
+        /// <param name="sQuery">select query</param>
+        /// <param name="dt">Source DataTable</param>
+        public void ExecuteDataTable(string sQuery, DataTable dt)
+        {
+            try
+            {
+                if (CreatConn())
+                {
+                    using (DataSet ds = new DataSet())
+                    {
+                        ds.Tables.Add(dt);
+                        ExecuteDataSet(sQuery, ds, string.Empty);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Release all resources taken by the object of this class
+        /// </summary>
+        public void Dispose()
+        {
+            try
+            {
+                DbConn.Dispose();
+                _sConString = null;
+            }
+            catch (Exception)
+            {
+
+                //throw;
+            }
+        }
+    }
+}

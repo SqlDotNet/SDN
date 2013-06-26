@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <script src="/Scripts/jquery-2.0.2.intellisense.js"></script>
+    <script src="/Scripts/jquery-2.0.2.js"></script>
+    <script src="/Scripts/jquery-2.0.2.min.js"></script>
+    <link href="/Contents/main_css.css" rel="stylesheet" />
+    <meta name="viewport" content="width=device-width" />
+    <script type="text/javascript">
+        $("#searchText").focus(function () {
+            alert("alert message");
+        });
+
+    </script>
+    <title>@ViewBag.Title</title>
+</head>
+<body>
+    <div class="maindiv">
+        <div class="header">
+            <div class="topBar">
+                <div class="SignOut">
+                    <a href="#">Sign Out</a>
+                </div>
+                <div class="SignIn">
+                    <a href="#">Sign In</a>
+                </div>
+            </div>
+            <div class="rssBar">
+                Rss
+            </div>
+            <div class="titleBar">
+                Title Bar
+                <div class="searchBar">
+                    <div class="searchInner">
+                        <input type="text" id="searchText" value="search any thing" /><input id="searchButton" type="button" value="Search" />
+                    </div>
+                </div>
+            </div>
+            Header
+        </div>
+        <div class="contents">
+            <div>
+                @RenderBody()
+            </div>
+        </div>
+        <div class="footer">
+            &nbsp;
+            <div class="latestNews">
+                Latest News<br />
+                <a href="#">Microsoft's anti-botnet tactics draw fire from security crews</a>
+                <p>Citadel was the seventh Microsoft-led operation against botnets. While some researchers commend the company for causing financial pain to...</p>
+            </div>
+            <div class="latestDiscussion">
+                Latest Discussion
+            </div>
+            <div class="BestPick">
+                Best Pick
+            </div>
+            <div class="contactUs">
+                Contact Us
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
